@@ -19,6 +19,10 @@ final class AppModel {
     var placing: Pin = .start
     var bandId: String = ""
     private(set) var outcome: Outcome?
+    /// Latest GPS fix (works offline). Nil until the user allows location access and a fix arrives.
+    private(set) var myLocation: CLLocationCoordinate2D?
+    private var autoStartDone = false
+    private var outsideNoticeShown = false
 
     init() {
         Task.detached(priority: .userInitiated) {
@@ -31,6 +35,7 @@ final class AppModel {
             await MainActor.run {
                 self.service = service
                 self.bandId = service.fares.defaultBandId
+                self.autoStartIfReady()
             }
         }
     }
@@ -47,6 +52,53 @@ final class AppModel {
             destination = c
         }
         recompute()
+    }
+
+    // MARK: - Location
+
+    func locationUpdated(_ c: CLLocationCoordinate2D) {
+        myLocation = c
+        autoStartIfReady()
+    }
+
+    /// The first fix inside coverage becomes the start, unless the user has placed one. Fixes outside
+    /// coverage don't end the wait; the user is told once.
+    private func autoStartIfReady() {
+        guard !autoStartDone, service != nil, let c = myLocation else { return }
+        if start != nil {
+            autoStartDone = true
+        } else if isInCoverage(c) {
+            autoStartDone = true
+            useMyLocationAsStart()
+        } else if !outsideNoticeShown {
+            outsideNoticeShown = true
+            outcome = .message("You're outside BeFare's area (city proper to Sta. Lourdes). Tap the map to choose a start.")
+        }
+    }
+
+    func showLocationUnavailable() {
+        let status = CLLocationManager().authorizationStatus
+        outcome = .message(status == .denied || status == .restricted
+            ? "Location access is off for BeFare. Turn it on in Settings › Privacy › Location Services."
+            : "Waiting for a GPS fix. Make sure Location Services is on; it works without internet.")
+    }
+
+    func isInCoverage(_ c: CLLocationCoordinate2D) -> Bool {
+        service?.coverage.contains(p: LatLng(lat: c.latitude, lon: c.longitude)) ?? false
+    }
+
+    /// Sets the start to the current GPS position. Returns false (and says why) if it can't.
+    @discardableResult
+    func useMyLocationAsStart() -> Bool {
+        guard let c = myLocation, let service else { return false }
+        guard isInCoverage(c) else {
+            outcome = .message("You're outside BeFare's area (city proper to Sta. Lourdes), so your location can't be the start.")
+            return false
+        }
+        start = c
+        if destination == nil { placing = .destination }
+        recompute()
+        return true
     }
 
     func swap() {

@@ -38,6 +38,11 @@ class AppState : ViewModel() {
         private set
     var outcome by mutableStateOf<Outcome?>(null)
         private set
+    /** Latest GPS fix (works offline). Null until location is allowed and a fix arrives. */
+    var myLocation by mutableStateOf<LatLng?>(null)
+        private set
+    private var autoStartDone = false
+    private var outsideNoticeShown = false
 
     val bands: List<FuelBand> get() = service?.fares?.bands.orEmpty()
     val isCurrentBandSet: Boolean get() = service?.fares?.isCurrentBandSet ?: false
@@ -53,6 +58,54 @@ class AppState : ViewModel() {
         this.offline = data
         this.service = service
         this.bandId = service.fares.defaultBandId
+        autoStartIfReady()
+    }
+
+    // ---- Location ----
+
+    fun locationUpdated(p: LatLng) {
+        myLocation = p
+        autoStartIfReady()
+    }
+
+    /**
+     * The first fix inside coverage becomes the start, unless the user has placed one. Fixes outside
+     * coverage (or a stale first fix) don't end the wait; the user is told once.
+     */
+    private fun autoStartIfReady() {
+        val p = myLocation
+        if (autoStartDone || service == null || p == null) return
+        if (start != null) {
+            autoStartDone = true
+        } else if (isInCoverage(p)) {
+            autoStartDone = true
+            useMyLocationAsStart()
+        } else if (!outsideNoticeShown) {
+            outsideNoticeShown = true
+            outcome = Outcome.Message("You're outside BeFare's area (city proper to Sta. Lourdes). Tap the map to choose a start.")
+        }
+    }
+
+    fun isInCoverage(p: LatLng) = service?.coverage?.contains(p) ?: false
+
+    /** Sets the start to the current GPS position. Returns false (and says why) if it can't. */
+    fun useMyLocationAsStart(): Boolean {
+        val p = myLocation ?: return false
+        if (!isInCoverage(p)) {
+            outcome = Outcome.Message("You're outside BeFare's area (city proper to Sta. Lourdes), so your location can't be the start.")
+            return false
+        }
+        start = p
+        if (destination == null) placing = Pin.DESTINATION
+        recompute()
+        return true
+    }
+
+    fun showLocationUnavailable(permissionDenied: Boolean) {
+        outcome = Outcome.Message(
+            if (permissionDenied) "Location access is off for BeFare. Allow it in Settings › Apps › BeFare › Permissions."
+            else "Waiting for a GPS fix. Make sure Location is on; it works without internet."
+        )
     }
 
     fun place(p: LatLng) {

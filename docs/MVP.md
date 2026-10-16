@@ -8,6 +8,7 @@ A first runnable version: just enough to see the idea working.
 - **Dark mode** map (Protomaps "dark" flavor) and dark UI.
 - Outside the coverage area the map fades to nothing: a smooth curve from clear to solid near-black over about 1.8 km. The outline is a smooth curve with no corners, and a pin is accepted exactly where the map is clear. The camera stays centred over the city.
 - Zoom in / zoom out buttons.
+- **GPS start, offline:** on launch the app asks for location permission (when in use). The first GPS position inside the coverage area becomes the start, unless you've already placed one. Fixes from outside the area show one note and don't end the wait. A blue dot shows where you are, and a **My location** button centres on you (and sets the start if none is set). GPS needs no internet. Android uses the platform `LocationManager`, with no Google Play services.
 - Tap to place the **start** (green) and **destination** (red). The chips at the top choose which pin the next tap places. You can swap or clear the pins.
 - A road route drawn between the pins, using **on-device routing** (A* in the Kotlin shared core).
 - Tricycle fare from **Ordinance 1185**: regular and 20% discounted fare. You can change the gas-price band.
@@ -43,6 +44,18 @@ The SDK location goes in `local.properties` (`sdk.dir=…`, not committed). Test
 ```bash
 ./gradlew :androidApp:installDebug
 ```
+
+## Testing GPS on the emulators
+
+```bash
+xcrun simctl location booted set 9.7943,118.7487
+```
+
+```bash
+adb emu geo fix 118.7487 9.7943
+```
+
+Note that `adb emu geo fix` takes **longitude first**. Positions to try: San Jose (inside the area) `9.7943,118.7487`, Tiniguiban (inside) `9.7712,118.7357`, Sabang (outside) `10.197,118.89`. The Android emulator only updates its cached GPS position while an app is listening, so a fix you send while BeFare is closed shows up only after the next launch.
 
 ## Build & run
 

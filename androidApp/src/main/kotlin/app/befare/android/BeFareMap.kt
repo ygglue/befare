@@ -1,6 +1,8 @@
 package app.befare.android
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Location
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -17,6 +19,9 @@ import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.location.LocationComponentActivationOptions
+import org.maplibre.android.location.modes.CameraMode
+import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
@@ -48,10 +53,38 @@ class MapController {
     internal var map: MapLibreMap? = null
         set(value) {
             field = value
+            puckReady = false // a new map needs its location component activated again
             applyOrnamentMargins()
         }
     var screenHeightPx = 0
     private var ornamentsAbovePx = 0
+
+    internal var context: Context? = null
+    private var puckReady = false
+
+    fun center(p: LatLng) {
+        val map = map ?: return
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(MapLatLng(p.lat, p.lon), maxOf(map.cameraPosition.zoom, 15.0)), 400)
+    }
+
+    /** Shows the blue location dot, fed with fixes from [LocationTracker] (MapLibre's own engine is off). */
+    @SuppressLint("MissingPermission")
+    fun showLocation(location: Location) {
+        val map = map ?: return
+        val style = map.style?.takeIf { it.isFullyLoaded } ?: return
+        val context = context ?: return
+        val component = map.locationComponent
+        if (!puckReady) {
+            component.activateLocationComponent(
+                LocationComponentActivationOptions.builder(context, style).useDefaultLocationEngine(false).build()
+            )
+            component.isLocationComponentEnabled = true
+            component.cameraMode = CameraMode.NONE
+            component.renderMode = RenderMode.NORMAL
+            puckReady = true
+        }
+        component.forceLocationUpdate(location)
+    }
 
     fun zoomBy(delta: Double) {
         map?.animateCamera(CameraUpdateFactory.zoomBy(delta), 250)
@@ -133,6 +166,7 @@ private class MapHolder {
     private var pending: Triple<LatLng?, LatLng?, List<LatLng>>? = null
 
     fun setUp(context: Context, map: MapLibreMap, offline: OfflineData, controller: MapController) {
+        controller.context = context
         controller.map = map
         map.uiSettings.isRotateGesturesEnabled = false
         map.uiSettings.isTiltGesturesEnabled = false

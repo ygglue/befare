@@ -1,9 +1,13 @@
 package app.befare.android
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +44,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -70,6 +75,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.befare.core.EstimateService
 import app.befare.core.FareQuote
+import app.befare.core.LatLng
+import androidx.core.content.ContextCompat
 import app.befare.core.formatPeso
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -92,6 +99,40 @@ fun BeFareApp() {
     val mapController = remember { MapController() }
     var showVerify by remember { mutableStateOf(false) }
     var cardTopPx by remember { mutableIntStateOf(0) }
+
+    // ---- GPS (offline) ----
+    val locationPermissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+    fun granted() = locationPermissions.any { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
+    var hasLocationPermission by remember { mutableStateOf(granted()) }
+    var permissionDenied by remember { mutableStateOf(false) }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+        hasLocationPermission = result.values.any { it }
+        permissionDenied = !hasLocationPermission
+    }
+    LaunchedEffect(Unit) { if (!hasLocationPermission) permissionLauncher.launch(locationPermissions) }
+    val tracker = remember { LocationTracker(context.applicationContext) }
+    DisposableEffect(hasLocationPermission) {
+        if (hasLocationPermission) {
+            tracker.start { fix ->
+                state.locationUpdated(LatLng(fix.latitude, fix.longitude))
+                mapController.showLocation(fix)
+            }
+        }
+        onDispose { tracker.stop() }
+    }
+    val onLocate: () -> Unit = {
+        val here = state.myLocation
+        when {
+            here == null && !hasLocationPermission && !permissionDenied -> permissionLauncher.launch(locationPermissions)
+            here == null -> state.showLocationUnavailable(permissionDenied)
+            !state.isInCoverage(here) -> state.useMyLocationAsStart() // explains; doesn't fly into the empty surround
+            else -> {
+                mapController.center(here)
+                if (state.start == null) state.useMyLocationAsStart()
+            }
+        }
+        Unit
+    }
 
     LaunchedEffect(Unit) {
         if (state.service != null) return@LaunchedEffect
@@ -125,7 +166,10 @@ fun BeFareApp() {
                 PinBar(state)
                 Spacer(Modifier.weight(1f))
                 Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.End) {
-                    ZoomButtons(mapController)
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        LocateButton(hasFix = state.myLocation != null, startSet = state.start != null, onClick = onLocate)
+                        ZoomButtons(mapController)
+                    }
                 }
                 Card(
                     state,
@@ -221,6 +265,21 @@ private fun RoundIcon(icon: ImageVector, label: String, onClick: () -> Unit) {
     ) {
         Surface(shape = CircleShape, color = Palette.Overlay, border = OverlayBorderStroke, shadowElevation = 4.dp, modifier = Modifier.size(40.dp)) {
             Box(contentAlignment = Alignment.Center) { Icon(icon, null, Modifier.size(20.dp)) }
+        }
+    }
+}
+
+/** Centres on the user's GPS position and uses it as the start if none is set. */
+@Composable
+private fun LocateButton(hasFix: Boolean, startSet: Boolean, onClick: () -> Unit) {
+    Surface(shape = RoundedCornerShape(14.dp), color = Palette.Overlay, border = OverlayBorderStroke, shadowElevation = 4.dp) {
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.size(52.dp).semantics {
+                onClick(label = if (startSet) "centre the map on you" else "centre the map on you and set your start") { onClick(); true }
+            },
+        ) {
+            Icon(Icons.MyLocation, "My location", tint = if (hasFix) Palette.Accent else Palette.Text)
         }
     }
 }

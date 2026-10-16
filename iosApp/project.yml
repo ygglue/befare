@@ -39,6 +39,7 @@ targets:
       path: BeFare/Info.plist
       properties:
         CFBundleDisplayName: BeFare
+        NSLocationWhenInUseUsageDescription: BeFare uses your location to set where you're starting. It works offline and never leaves your phone.
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
     settings:

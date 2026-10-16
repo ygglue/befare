@@ -13,6 +13,7 @@ struct ContentView: View {
                 destination: model.destination,
                 route: routeLine,
                 controller: mapController,
+                onLocation: { model.locationUpdated($0) },
                 onTap: { model.place($0) }
             )
             .ignoresSafeArea()
@@ -22,7 +23,10 @@ struct ContentView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    zoomButtons
+                    VStack(spacing: 10) {
+                        locateButton
+                        zoomButtons
+                    }
                 }
                 .padding(.bottom, 12)
                 card
@@ -49,6 +53,31 @@ struct ContentView: View {
     }
 
     // MARK: - Zoom
+
+    /// Centres on the user's GPS position and uses it as the start if none is set.
+    private var locateButton: some View {
+        Button {
+            guard let c = model.myLocation else {
+                model.showLocationUnavailable()
+                return
+            }
+            guard model.isInCoverage(c) else {
+                // Don't fly the map out into the empty surround; just explain.
+                model.useMyLocationAsStart()
+                return
+            }
+            mapController.center(on: c)
+            if model.start == nil { model.useMyLocationAsStart() }
+        } label: {
+            Image(systemName: model.myLocation == nil ? "location" : "location.fill")
+                .font(.body.weight(.semibold))
+                .frame(width: 44, height: 44)
+        }
+        .foregroundStyle(.primary)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .accessibilityLabel("My location")
+        .accessibilityHint(model.start == nil ? "Centres the map on you and sets your start" : "Centres the map on you")
+    }
 
     private var zoomButtons: some View {
         VStack(spacing: 0) {

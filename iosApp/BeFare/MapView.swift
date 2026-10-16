@@ -10,6 +10,7 @@ struct MapView: UIViewRepresentable {
     var destination: CLLocationCoordinate2D?
     var route: [CLLocationCoordinate2D]
     var controller: MapController
+    var onLocation: (CLLocationCoordinate2D) -> Void
     var onTap: (CLLocationCoordinate2D) -> Void
 
     func makeUIView(context: Context) -> MLNMapView {
@@ -20,6 +21,9 @@ struct MapView: UIViewRepresentable {
         map.maximumZoomLevel = 18
         map.allowsRotating = false
         map.allowsTilting = false
+        // Blue dot for the user's position. MapLibre asks for when-in-use permission (Info.plist text in
+        // project.yml). GPS needs no network, so this works offline.
+        map.showsUserLocation = true
         map.backgroundColor = OfflineStyle.maskColor
 
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapped(_:)))
@@ -102,6 +106,11 @@ struct MapView: UIViewRepresentable {
             parent.controller.applyOrnamentMargins() // the map has its real size by now
         }
 
+        func mapView(_ map: MLNMapView, didUpdate userLocation: MLNUserLocation?) {
+            guard let c = userLocation?.location?.coordinate, CLLocationCoordinate2DIsValid(c) else { return }
+            parent.onLocation(c)
+        }
+
         /// Keep the camera centred over the covered area. The bundled tiles extend far enough past it
         /// (pipeline: --bbox=118.55,9.55,118.92,10.03) to fill the screen at the minimum zoom.
         func mapView(_ map: MLNMapView, shouldChangeFrom old: MLNMapCamera, to new: MLNMapCamera) -> Bool {
@@ -147,6 +156,11 @@ final class MapController {
         map.logoViewMargins = CGPoint(x: 20, y: bottom)
         map.attributionButtonPosition = .bottomLeft
         map.attributionButtonMargins = CGPoint(x: 20 + map.logoView.bounds.width + 8, y: bottom)
+    }
+
+    func center(on c: CLLocationCoordinate2D) {
+        guard let map else { return }
+        map.setCenter(c, zoomLevel: max(map.zoomLevel, 15), animated: true)
     }
 
     func zoom(by delta: Double) {

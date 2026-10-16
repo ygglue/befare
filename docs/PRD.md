@@ -27,8 +27,9 @@ Give any commuter a trustworthy fare estimate in seconds, fully offline, and let
    - Swap start and destination.
 3. **Road route** between the pins, drawn on the map, with distance.
    - Pins snap to the nearest road that tricycles can use.
-4. **Tricycle fare estimate** using the city's official tricycle fare matrix.
-   - Regular fare plus discounted fare (student / senior / PWD) where the matrix provides it.
+4. **Tricycle fare estimate** using City Ordinance No. 1185 (2021), the city's tricycle fare matrix.
+   - The fare depends on the **current gas-price band**. The app ships with a default band and an "as of" date, and the user can change it.
+   - Regular fare plus the 20% discounted fare (student / senior / PWD).
    - Shows the fare data version and effective date.
 5. **Verify button** that opens a breakdown:
    - Each step of the calculation (for example, base fare for the first N km, then a per-km rate times the extra distance, then rounding).
@@ -64,7 +65,9 @@ Give any commuter a trustworthy fare estimate in seconds, fully offline, and let
 
 ## Open questions
 
-- Does the city ordinance charge by distance, by zone, or a flat fare within the city proper plus extras? This decides the fare model. We'll know once the matrix photo is transcribed.
+- ~~Distance, zone or flat fare?~~ Answered: a table by whole km × gas-price band (Ord. 1185).
+- Ordinance details the matrix graphic doesn't state: partial-km rounding, discount rounding, band edges, effective date. See [the source notes](sources/pp-city-tricycle-ord1185-2021.md). Getting the full ordinance text from the City Council (Sangguniang Panlungsod) office answers all of them.
+- Who keeps the current gas band up to date, and from what price source?
 - Are tricycles barred from any roads (for example, parts of the national highway)? If so, routing must avoid them.
 - Special-trip / "pakyaw" fares: show them as a separate line?
 - Night surcharge, baggage, or extra-passenger rules?

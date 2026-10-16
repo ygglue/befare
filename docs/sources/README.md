@@ -11,10 +11,11 @@ Original fare documents BeFare relies on. Each file here gets an entry in `data/
    - Effective date
    - Where and when it was obtained (e.g. "photo of matrix posted at …, taken by … on …")
    - A plain-text transcription of the matrix
-3. A second person checks the transcription against the image before it goes into `fares.json`.
+3. A second person checks the transcription against the image.
+4. Run `python3 scripts/build_fares.py` to regenerate `data/fares/fares.json`.
 
 ## Sources
 
 | File | Issuer | Document | Effective | Status |
 |---|---|---|---|---|
-| _(tricycle fare matrix photo — to be added)_ | City Government of Puerto Princesa | TBD | TBD | Waiting for photo |
+| [pp-city-tricycle-ord1185-2021.jpg](pp-city-tricycle-ord1185-2021.jpg) ([transcription](pp-city-tricycle-ord1185-2021.md)) | City Government of Puerto Princesa | City Ordinance No. 1185 (2021) | Unknown | Transcribed; second-person check pending; ordinance text needed |

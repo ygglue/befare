@@ -1,0 +1,262 @@
+{
+  "version": "2026.10.0-draft",
+  "currency": "PHP",
+  "amountsIn": "centavos",
+  "sources": [
+    {
+      "id": "pp-ord-1185-2021",
+      "issuer": "City Government of Puerto Princesa",
+      "document": "City Ordinance No. 1185 — The New Tricycle Fare Ordinance of Puerto Princesa City of 2021",
+      "effectiveDate": null,
+      "assets": [
+        {
+          "file": "pp-city-tricycle-ord1185-2021.jpg",
+          "sha256": "045a4f8b4b9eb447f10429331c21aca4eb67137d370feca3f2b4f8562f5940c0"
+        }
+      ],
+      "verified": false,
+      "notes": "Transcribed from the published fare matrix graphic. Effective date and edge-case rules pending the ordinance text."
+    }
+  ],
+  "modes": [
+    {
+      "mode": "tricycle",
+      "rules": [
+        {
+          "id": "trike-km-table",
+          "type": "distance_table_by_fuel_band",
+          "label": "Tricycle fare by kilometre and gas price",
+          "sourceId": "pp-ord-1185-2021",
+          "kmRounding": "ceil",
+          "kmRoundingVerified": false,
+          "maxKm": 20,
+          "fuel": "gasoline",
+          "currentBand": {
+            "id": null,
+            "asOf": null,
+            "basis": null
+          },
+          "bands": [
+            {
+              "id": "regular",
+              "label": "Regular fare",
+              "gasMinCentavos": null,
+              "gasMaxCentavos": null,
+              "minimumFare": 1200,
+              "fares": [
+                1200,
+                1200,
+                1400,
+                1600,
+                1800,
+                2000,
+                2200,
+                2400,
+                2600,
+                2800,
+                3000,
+                3200,
+                3400,
+                3600,
+                3800,
+                4000,
+                4200,
+                4400,
+                4600,
+                4800
+              ]
+            },
+            {
+              "id": "gas-60-70",
+              "label": "Gas ₱60–₱70",
+              "gasMinCentavos": 6000,
+              "gasMaxCentavos": 7000,
+              "minimumFare": 1200,
+              "fares": [
+                1200,
+                1200,
+                1400,
+                1600,
+                1800,
+                2000,
+                2200,
+                2400,
+                2600,
+                2800,
+                3000,
+                3200,
+                3400,
+                3600,
+                3800,
+                4000,
+                4200,
+                4400,
+                4600,
+                4800
+              ]
+            },
+            {
+              "id": "gas-70-80",
+              "label": "Gas ₱70–₱80",
+              "gasMinCentavos": 7000,
+              "gasMaxCentavos": 8000,
+              "minimumFare": 1400,
+              "fares": [
+                1400,
+                1400,
+                1600,
+                1800,
+                2000,
+                2200,
+                2400,
+                2600,
+                2800,
+                3000,
+                3200,
+                3400,
+                3600,
+                3800,
+                4000,
+                4200,
+                4400,
+                4600,
+                4800,
+                5000
+              ]
+            },
+            {
+              "id": "gas-80-90",
+              "label": "Gas ₱80–₱90",
+              "gasMinCentavos": 8000,
+              "gasMaxCentavos": 9000,
+              "minimumFare": 1600,
+              "fares": [
+                1600,
+                1600,
+                1800,
+                2000,
+                2200,
+                2400,
+                2600,
+                2800,
+                3000,
+                3200,
+                3400,
+                3600,
+                3800,
+                4000,
+                4200,
+                4400,
+                4600,
+                4800,
+                5000,
+                5200
+              ]
+            },
+            {
+              "id": "gas-90-100",
+              "label": "Gas ₱90–₱100",
+              "gasMinCentavos": 9000,
+              "gasMaxCentavos": 10000,
+              "minimumFare": 1800,
+              "fares": [
+                1800,
+                1800,
+                2000,
+                2200,
+                2400,
+                2600,
+                2800,
+                3000,
+                3200,
+                3400,
+                3600,
+                3800,
+                4000,
+                4200,
+                4400,
+                4600,
+                4800,
+                5000,
+                5200,
+                5400
+              ]
+            },
+            {
+              "id": "gas-100-110",
+              "label": "Gas ₱100–₱110",
+              "gasMinCentavos": 10000,
+              "gasMaxCentavos": 11000,
+              "minimumFare": 2000,
+              "fares": [
+                2000,
+                2000,
+                2200,
+                2400,
+                2600,
+                2800,
+                3000,
+                3200,
+                3400,
+                3600,
+                3800,
+                4000,
+                4200,
+                4400,
+                4600,
+                4800,
+                5000,
+                5200,
+                5400,
+                5600
+              ]
+            },
+            {
+              "id": "gas-110-120",
+              "label": "Gas ₱110–₱120",
+              "gasMinCentavos": 11000,
+              "gasMaxCentavos": 12000,
+              "minimumFare": 2200,
+              "fares": [
+                2200,
+                2200,
+                2400,
+                2600,
+                2800,
+                3000,
+                3200,
+                3400,
+                3600,
+                3800,
+                4000,
+                4200,
+                4400,
+                4600,
+                4800,
+                5000,
+                5200,
+                5400,
+                5600,
+                5800
+              ]
+            }
+          ]
+        }
+      ],
+      "discounts": [
+        {
+          "id": "senior-pwd-student",
+          "label": "Senior citizen / PWD / Student",
+          "type": "percent",
+          "value": 20,
+          "sourceId": "pp-ord-1185-2021"
+        }
+      ],
+      "rounding": {
+        "type": "none",
+        "verified": false,
+        "sourceId": "pp-ord-1185-2021"
+      }
+    }
+  ]
+}

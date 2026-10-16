@@ -1,6 +1,6 @@
 # ADR 0004: Coverage limited to urban Puerto Princesa (city proper → Sta. Lourdes)
 
-- **Status:** Accepted (exact polygon to be drawn)
+- **Status:** Accepted. The hand-drawn polygon in `data/coverage/coverage.geojson` is accepted for v1 (2026-10-16). Barangay boundaries are optional later work.
 - **Date:** 2026-10-16
 
 ## Context

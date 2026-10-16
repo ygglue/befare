@@ -4,7 +4,10 @@ A first runnable version: just enough to see the idea working.
 
 ## What it does
 
-- Map of Puerto Princesa with everything outside the coverage area faded, and the camera kept near the city.
+- **Fully offline map** of Puerto Princesa: vector tiles (2.7 MB), style, fonts and icons all ship with the app. No network needed.
+- **Dark mode** map (Protomaps "dark" flavor) and dark UI.
+- Outside the coverage area the map fades to nothing: a smooth curve from clear to solid near-black over about 1.8 km. The outline is a smooth curve with no corners, and a pin is accepted exactly where the map is clear. The camera stays centred over the city.
+- Zoom in / zoom out buttons.
 - Tap to place the **start** (green) and **destination** (red). The chips at the top choose which pin the next tap places. You can swap or clear the pins.
 - A road route drawn between the pins, using **on-device routing** (A* in the Kotlin shared core).
 - Tricycle fare from **Ordinance 1185**: regular and 20% discounted fare. You can change the gas-price band.
@@ -14,16 +17,27 @@ A first runnable version: just enough to see the idea working.
 
 | Area | Plan | MVP | Why |
 |---|---|---|---|
-| Base map tiles | Bundled offline PMTiles | **Online** OpenFreeMap tiles | Building tiles needs the full pipeline. Routing and fares already work offline. |
-| Coverage polygon | Union of barangay boundaries | Hand-drawn sketch | Placeholder until the barangay list is agreed (ADR 0004) |
+| Base map tiles | Bundled PMTiles built with Planetiler | Bundled PMTiles **cut from a Protomaps daily build** (`pmtiles extract`), styled with `@protomaps/basemaps` | Same outcome (offline, about 3 MB) without running Planetiler on the whole Philippines. Switch when we need custom layers. |
+| Coverage polygon | Union of barangay boundaries | Hand-drawn polygon | Accepted as good enough for v1 (2026-10-16) |
 | Road data | Geofabrik extract → Kotlin pipeline | Overpass download → `pipeline/build_graph.py` | Faster to get going. Same graph format idea. |
 | Graph | Degree-2 contraction, turn restrictions, built-in spatial index | Every OSM node kept, no turn restrictions, spatial grid built when the app loads | The graph is small (~21k nodes, ~700 KB) |
 | Android | Compose + MapLibre | Not yet | No Android SDK on the dev machine |
 | Gas band | Default band shipped in the data | Defaults to "Regular fare" with a warning | `currentBand` is still unset |
 
+## Offline map pieces
+
+| File (in `data/build/`) | Made by | What it is |
+|---|---|---|
+| `befare.pmtiles` | `pmtiles extract` (in `scripts/build_mvp.sh`) | Vector tiles z0–15 for `118.55,9.55,118.92,10.03` |
+| `style/befare-style.json`, `style/fonts/`, `style/sprites/` | `pipeline/style/build_style.mjs` | Protomaps "dark" style with `{TILES}`/`{ASSETS}` placeholders, Noto Sans glyphs (Latin + ₱), sprites |
+| `coverage-smooth.geojson` | `pipeline/build_mask.py` | The hand-drawn coverage padded by 350 m and smoothed with Chaikin corner cutting. The script checks key barangays are still inside. The app uses it for the coverage check. |
+| `mask.geojson` | `pipeline/build_mask.py` | 32 stacked masks around the smoothed outline, each grown about 56 m more than the last. Each has its own opacity so together they follow a smoothstep curve to solid `#0e0f12`. |
+
+The app fills in the style placeholders with file URLs from its bundle when it starts (`OfflineStyle` in `MapView.swift`).
+
 ## Build & run
 
-Requirements: Xcode, Homebrew `openjdk@21` and `xcodegen`, Python 3.
+Requirements: Xcode, Homebrew `openjdk@21`, `xcodegen` and `pmtiles`, Node, Python 3. Building needs internet (OSM roads, tiles, fonts). The app doesn't.
 
 ```bash
 scripts/build_mvp.sh

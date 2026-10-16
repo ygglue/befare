@@ -26,17 +26,13 @@ final class AppModel {
             let service = EstimateService.companion.fromFiles(
                 graphPath: b.path(forResource: "graph", ofType: "bin")!,
                 faresPath: b.path(forResource: "fares", ofType: "json")!,
-                coveragePath: b.path(forResource: "coverage", ofType: "geojson")!
+                coveragePath: b.path(forResource: "coverage-smooth", ofType: "geojson")!
             )
             await MainActor.run {
                 self.service = service
                 self.bandId = service.fares.defaultBandId
             }
         }
-    }
-
-    var coverageRing: [CLLocationCoordinate2D] {
-        service?.coverage.ring.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) } ?? []
     }
 
     var bands: [FuelBand] { service?.fares.bands ?? [] }

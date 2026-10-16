@@ -4,14 +4,15 @@ import SwiftUI
 struct ContentView: View {
     @Bindable var model: AppModel
     @State private var showVerify = false
+    @State private var mapController = MapController()
 
     var body: some View {
         ZStack {
             MapView(
-                coverage: model.coverageRing,
                 start: model.start,
                 destination: model.destination,
                 route: routeLine,
+                controller: mapController,
                 onTap: { model.place($0) }
             )
             .ignoresSafeArea()
@@ -19,6 +20,11 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 pinPicker
                 Spacer()
+                HStack {
+                    Spacer()
+                    zoomButtons
+                }
+                .padding(.bottom, 12)
                 card
             }
             .padding(.horizontal, 16)
@@ -36,6 +42,25 @@ struct ContentView: View {
         case let .quote(route, _), let .route(route, _): route
         default: []
         }
+    }
+
+    // MARK: - Zoom
+
+    private var zoomButtons: some View {
+        VStack(spacing: 0) {
+            Button { mapController.zoom(by: 1) } label: {
+                Image(systemName: "plus").frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Zoom in")
+            Divider().frame(width: 28)
+            Button { mapController.zoom(by: -1) } label: {
+                Image(systemName: "minus").frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Zoom out")
+        }
+        .font(.body.weight(.semibold))
+        .foregroundStyle(.primary)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     // MARK: - Top: which pin a tap places

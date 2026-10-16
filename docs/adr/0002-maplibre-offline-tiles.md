@@ -1,6 +1,6 @@
 # ADR 0002: MapLibre with bundled OSM vector tiles
 
-- **Status:** Accepted (PMTiles vs MBTiles to be confirmed in a spike)
+- **Status:** Accepted. PMTiles confirmed working with MapLibre Native iOS 6.31 (`pmtiles://file://…`) in the MVP.
 - **Date:** 2026-10-16
 
 ## Context

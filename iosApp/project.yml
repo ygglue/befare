@@ -18,9 +18,18 @@ targets:
         buildPhase: resources
       - path: ../data/fares/fares.json
         buildPhase: resources
-      - path: ../data/coverage/coverage.geojson
+      # Smoothed outline (pipeline/build_mask.py): used for the fade and the coverage check alike.
+      - path: ../data/build/coverage-smooth.geojson
         buildPhase: resources
       - path: ../docs/sources/pp-city-tricycle-ord1185-2021.jpg
+        buildPhase: resources
+      - path: ../data/build/befare.pmtiles
+        buildPhase: resources
+      - path: ../data/build/mask.geojson
+        buildPhase: resources
+      # Folder reference: keeps fonts/ and sprites/ paths intact for the style.
+      - path: ../data/build/style
+        type: folder
         buildPhase: resources
     dependencies:
       - package: MapLibre

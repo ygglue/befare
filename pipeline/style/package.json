@@ -1,0 +1,9 @@
+{
+  "name": "befare-style",
+  "private": true,
+  "type": "module",
+  "description": "Generates the offline MapLibre style for BeFare from @protomaps/basemaps",
+  "dependencies": {
+    "@protomaps/basemaps": "5.7.2"
+  }
+}

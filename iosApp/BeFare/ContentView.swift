@@ -26,6 +26,10 @@ struct ContentView: View {
                 }
                 .padding(.bottom, 12)
                 card
+                    // Keep MapLibre's logo and attribution visible above the card.
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: {
+                        mapController.keepOrnamentsAbove(y: $0)
+                    }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 8)

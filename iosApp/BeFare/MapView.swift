@@ -99,6 +99,7 @@ struct MapView: UIViewRepresentable {
 
             (routeSource, startSource, endSource) = (route, start, end)
             apply()
+            parent.controller.applyOrnamentMargins() // the map has its real size by now
         }
 
         /// Keep the camera centred over the covered area. The bundled tiles extend far enough past it
@@ -126,7 +127,27 @@ struct MapView: UIViewRepresentable {
 
 /// Lets SwiftUI controls (zoom buttons) drive the map.
 final class MapController {
-    weak var map: MLNMapView?
+    weak var map: MLNMapView? {
+        didSet { applyOrnamentMargins() }
+    }
+    private var cardTop: CGFloat = 0
+
+    /// Moves MapLibre's logo and attribution button so they sit just above the fare card,
+    /// whose top edge is at [y] in screen coordinates (the map fills the screen).
+    func keepOrnamentsAbove(y: CGFloat) {
+        cardTop = y
+        applyOrnamentMargins()
+    }
+
+    func applyOrnamentMargins() {
+        guard let map, cardTop > 0, map.bounds.height > 0 else { return }
+        // Margins are measured from the safe area, so take the bottom inset back out.
+        let bottom = map.bounds.height - cardTop - map.safeAreaInsets.bottom + 8
+        map.logoViewPosition = .bottomLeft
+        map.logoViewMargins = CGPoint(x: 20, y: bottom)
+        map.attributionButtonPosition = .bottomLeft
+        map.attributionButtonMargins = CGPoint(x: 20 + map.logoView.bounds.width + 8, y: bottom)
+    }
 
     func zoom(by delta: Double) {
         guard let map else { return }

@@ -3,6 +3,7 @@ package app.befare.android
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
 import app.befare.core.Endpoint
 import app.befare.core.EstimateResult
 import app.befare.core.EstimateService
@@ -11,8 +12,11 @@ import app.befare.core.FareResult
 import app.befare.core.FuelBand
 import app.befare.core.LatLng
 
-/** UI state around the shared Kotlin [EstimateService]. Mirrors iosApp/BeFare/AppModel.swift. */
-class AppState {
+/**
+ * UI state around the shared Kotlin [EstimateService]. Mirrors iosApp/BeFare/AppModel.swift.
+ * A ViewModel, so pins and the fare survive the activity being recreated (font size, dark mode changes).
+ */
+class AppState : ViewModel() {
     enum class Pin { START, DESTINATION }
 
     sealed interface Outcome {

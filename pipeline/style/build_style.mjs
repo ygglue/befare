@@ -20,6 +20,18 @@ const RANGES = ["0-255", "256-511", "8192-8447"];
 const FLAVOR = "dark";
 const SPRITES = [`${FLAVOR}.json`, `${FLAVOR}.png`, `${FLAVOR}@2x.json`, `${FLAVOR}@2x.png`];
 
+// Protomaps' dark labels are ~2:1 against the land colour (#1f1f1f). Brighten them to ≥4.5:1 (WCAG AA).
+const flavor = {
+  ...namedFlavor(FLAVOR),
+  roads_label_minor: "#8e8e8e",    // 5.0:1
+  roads_label_major: "#a8a8a8",    // 6.9:1
+  subplace_label: "#9c9c9c",       // 6.0:1
+  address_label: "#8a8a8a",        // 4.7:1
+  city_label: "#c8c8c8",           // 10:1
+  ocean_label: "#9ea6b5",          // 4.9:1 on water
+  pois: { ...namedFlavor(FLAVOR).pois, lapis: "#7C9BF7" }, // was 2.9:1
+};
+
 const style = {
   version: 8,
   name: "BeFare (offline)",
@@ -32,7 +44,7 @@ const style = {
       attribution: "© OpenStreetMap contributors · Protomaps",
     },
   },
-  layers: layers("protomaps", namedFlavor(FLAVOR), { lang: "en" }),
+  layers: layers("protomaps", flavor, { lang: "en" }),
 };
 
 async function fetchTo(url, path) {

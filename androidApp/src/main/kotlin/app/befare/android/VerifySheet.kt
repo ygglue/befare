@@ -14,12 +14,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -40,6 +43,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,17 +64,27 @@ fun VerifySheet(quote: FareQuote, isCurrentBandSet: Boolean, sourceImage: File?,
     var showSource by remember { mutableStateOf(false) }
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = Palette.Overlay,
+        contentColor = Palette.Text,
+    ) {
         LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            item { Text("Verify estimate", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp)) }
+            item {
+                Text(
+                    "Verify estimate", fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp).semantics { heading() },
+                )
+            }
 
             item { SectionTitle("How this fare was calculated") }
             item {
                 Section {
                     quote.lines.forEachIndexed { i, line ->
-                        if (i > 0) HorizontalDivider()
-                        Row(Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.Top) {
-                            Column(Modifier.weight(1f)) {
+                        if (i > 0) HorizontalDivider(color = Palette.OverlayBorder)
+                        Row(Modifier.padding(vertical = 12.dp).semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.Top) {
+                            Column(Modifier.weight(1f).padding(end = 12.dp)) {
                                 Text(line.label)
                                 Text(line.detail, fontSize = 12.sp, color = muted)
                             }
@@ -81,12 +98,13 @@ fun VerifySheet(quote: FareQuote, isCurrentBandSet: Boolean, sourceImage: File?,
             item {
                 Section {
                     quote.row.forEachIndexed { i, cell ->
-                        if (i > 0) HorizontalDivider()
+                        if (i > 0) HorizontalDivider(color = Palette.OverlayBorder)
                         val current = cell.bandId == quote.band.id
                         Row(
                             Modifier.fillMaxWidth()
-                                .background(if (current) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f) else Color.Transparent)
-                                .padding(vertical = 10.dp, horizontal = 4.dp),
+                                .background(if (current) Palette.Accent.copy(alpha = 0.16f) else Color.Transparent, RoundedCornerShape(8.dp))
+                                .padding(vertical = 12.dp, horizontal = 8.dp)
+                                .semantics(mergeDescendants = true) { if (current) stateDescription = "In use" },
                         ) {
                             Text(cell.label, Modifier.weight(1f), fontWeight = if (current) FontWeight.Bold else FontWeight.Normal)
                             Text(formatPeso(cell.centavos), fontWeight = if (current) FontWeight.Bold else FontWeight.Normal)
@@ -96,7 +114,7 @@ fun VerifySheet(quote: FareQuote, isCurrentBandSet: Boolean, sourceImage: File?,
                 Text(
                     if (isCurrentBandSet) "The highlighted band is the one in use."
                     else "The fare depends on today's gas price. Agree on the band with your driver.",
-                    fontSize = 12.sp, color = muted, modifier = Modifier.padding(top = 6.dp),
+                    fontSize = 13.sp, color = muted, lineHeight = 18.sp, modifier = Modifier.padding(top = 8.dp, start = 4.dp),
                 )
             }
 
@@ -104,20 +122,21 @@ fun VerifySheet(quote: FareQuote, isCurrentBandSet: Boolean, sourceImage: File?,
             item {
                 Section {
                     Field("Issued by", quote.source.issuer)
-                    HorizontalDivider()
+                    HorizontalDivider(color = Palette.OverlayBorder)
                     Field("Document", quote.source.document)
-                    HorizontalDivider()
+                    HorizontalDivider(color = Palette.OverlayBorder)
                     Field("Effective", quote.source.effectiveDate ?: "Not confirmed")
-                    HorizontalDivider()
+                    HorizontalDivider(color = Palette.OverlayBorder)
                     Field("Fare data version", quote.dataVersion)
                     if (image != null) {
                         Spacer(Modifier.height(8.dp))
                         Image(
                             image, "Fare matrix, City Ordinance No. 1185",
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable { showSource = true },
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                                .clickable(onClickLabel = "Open the fare matrix full screen") { showSource = true },
                             contentScale = ContentScale.FillWidth,
                         )
-                        Text("Tap to open", fontSize = 12.sp, color = muted, modifier = Modifier.padding(vertical = 6.dp))
+                        Text("Tap to open full screen", fontSize = 13.sp, color = muted, modifier = Modifier.padding(vertical = 8.dp).clearAndSetSemantics {})
                     }
                 }
             }
@@ -126,8 +145,12 @@ fun VerifySheet(quote: FareQuote, isCurrentBandSet: Boolean, sourceImage: File?,
             item {
                 Section {
                     quote.assumptions.forEachIndexed { i, text ->
-                        if (i > 0) HorizontalDivider()
-                        Text("ⓘ  $text", fontSize = 14.sp, modifier = Modifier.padding(vertical = 10.dp))
+                        if (i > 0) HorizontalDivider(color = Palette.OverlayBorder)
+                        Row(Modifier.padding(vertical = 12.dp), verticalAlignment = Alignment.Top) {
+                            Icon(Icons.Info, null, Modifier.size(18.dp).padding(top = 1.dp), tint = muted)
+                            Spacer(Modifier.width(10.dp))
+                            Text(text, fontSize = 14.sp, lineHeight = 20.sp)
+                        }
                     }
                 }
                 Spacer(Modifier.height(24.dp))
@@ -152,10 +175,13 @@ fun VerifySheet(quote: FareQuote, isCurrentBandSet: Boolean, sourceImage: File?,
                     contentScale = ContentScale.Fit,
                 )
                 Column(Modifier.align(Alignment.TopCenter).padding(top = 48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Look for the ${quote.chargedKm} km row", fontWeight = FontWeight.SemiBold)
+                    Text("Look for the ${quote.chargedKm} km row", fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
-                TextButton(onClick = { showSource = false }, Modifier.align(Alignment.TopEnd).padding(top = 36.dp, end = 8.dp)) {
-                    Text("Done")
+                TextButton(
+                    onClick = { showSource = false },
+                    Modifier.align(Alignment.TopEnd).padding(top = 36.dp, end = 8.dp).heightIn(min = 48.dp),
+                ) {
+                    Text("Done", color = Palette.Accent, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -164,19 +190,22 @@ fun VerifySheet(quote: FareQuote, isCurrentBandSet: Boolean, sourceImage: File?,
 
 @Composable
 private fun SectionTitle(text: String) {
-    Text(text, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 16.dp, bottom = 6.dp))
+    Text(
+        text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = 20.dp, bottom = 8.dp, start = 4.dp).semantics { heading() },
+    )
 }
 
 @Composable
 private fun Section(content: @Composable () -> Unit) {
     Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 2.dp), verticalArrangement = Arrangement.Top) { content() }
+        Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp), verticalArrangement = Arrangement.Top) { content() }
     }
 }
 
 @Composable
 private fun Field(label: String, value: String) {
-    Row(Modifier.padding(vertical = 10.dp)) {
+    Row(Modifier.padding(vertical = 12.dp).semantics(mergeDescendants = true) {}) {
         Text(label, Modifier.width(150.dp).padding(end = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(value, Modifier.weight(1f))
     }

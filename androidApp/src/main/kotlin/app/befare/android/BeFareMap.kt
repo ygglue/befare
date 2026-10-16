@@ -46,9 +46,31 @@ import org.maplibre.android.geometry.LatLng as MapLatLng
 /** Lets Compose controls (zoom buttons) drive the map. */
 class MapController {
     internal var map: MapLibreMap? = null
+        set(value) {
+            field = value
+            applyOrnamentMargins()
+        }
+    var screenHeightPx = 0
+    private var ornamentsAbovePx = 0
 
     fun zoomBy(delta: Double) {
         map?.animateCamera(CameraUpdateFactory.zoomBy(delta), 250)
+    }
+
+    /** Moves MapLibre's logo and attribution button so they sit just above [topPx] (the card's top edge). */
+    fun keepOrnamentsAbove(topPx: Int) {
+        ornamentsAbovePx = topPx
+        applyOrnamentMargins()
+    }
+
+    private fun applyOrnamentMargins() {
+        val map = map ?: return
+        if (screenHeightPx == 0 || ornamentsAbovePx == 0) return
+        val dp = android.content.res.Resources.getSystem().displayMetrics.density
+        val bottom = screenHeightPx - ornamentsAbovePx + (8 * dp).toInt()
+        val left = (16 * dp).toInt()
+        map.uiSettings.setLogoMargins(left, 0, 0, bottom)
+        map.uiSettings.setAttributionMargins(left + (96 * dp).toInt(), 0, 0, bottom) // just right of the logo
     }
 }
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Builds everything the iOS MVP needs: road graph, fare bundle, offline map (tiles, style,
-# fonts, sprites, fade mask), Kotlin framework, Xcode project.
+# Builds everything the MVP apps need: road graph, fare bundle, offline map (tiles, style,
+# fonts, sprites, fade mask), the Kotlin framework + Xcode project (iOS) and the debug APK (Android).
 #
-# Needs: Xcode, Homebrew openjdk@21, xcodegen, pmtiles; Node; Python 3.
+# Needs: Xcode, Homebrew openjdk@21, xcodegen, pmtiles; Node; Python 3; for Android, the SDK path
+# in local.properties (sdk.dir=...) or ANDROID_HOME.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@21}"
@@ -37,4 +38,8 @@ python3 -I scripts/build_fares.py
 (cd pipeline/style && npm ci --silent --no-fund --no-audit && node build_style.mjs)
 ./gradlew :shared:jvmTest :shared:assembleBeFareCoreDebugXCFramework --console=plain -q
 (cd iosApp && xcodegen generate --quiet)
-echo "Done. Open iosApp/BeFare.xcodeproj and run the BeFare scheme on an iOS simulator."
+if [ -f local.properties ] || [ -n "${ANDROID_HOME:-}" ]; then
+  ./gradlew :androidApp:assembleDebug --console=plain -q
+  echo "Android: androidApp/build/outputs/apk/debug/androidApp-debug.apk"
+fi
+echo "Done. iOS: open iosApp/BeFare.xcodeproj and run the BeFare scheme on a simulator."

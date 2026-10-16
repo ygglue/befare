@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.BeFare" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0E0F12</item>
+    </style>
+</resources>

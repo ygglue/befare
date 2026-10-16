@@ -1,4 +1,4 @@
-# MVP (iOS simulator)
+# MVP (iOS and Android)
 
 A first runnable version: just enough to see the idea working.
 
@@ -21,7 +21,6 @@ A first runnable version: just enough to see the idea working.
 | Coverage polygon | Union of barangay boundaries | Hand-drawn polygon | Accepted as good enough for v1 (2026-10-16) |
 | Road data | Geofabrik extract → Kotlin pipeline | Overpass download → `pipeline/build_graph.py` | Faster to get going. Same graph format idea. |
 | Graph | Degree-2 contraction, turn restrictions, built-in spatial index | Every OSM node kept, no turn restrictions, spatial grid built when the app loads | The graph is small (~21k nodes, ~700 KB) |
-| Android | Compose + MapLibre | Not yet | No Android SDK on the dev machine |
 | Gas band | Default band shipped in the data | Defaults to "Regular fare" with a warning | `currentBand` is still unset |
 
 ## Offline map pieces
@@ -35,6 +34,16 @@ A first runnable version: just enough to see the idea working.
 
 The app fills in the style placeholders with file URLs from its bundle when it starts (`OfflineStyle` in `MapView.swift`).
 
+## Android
+
+`androidApp/` is a Jetpack Compose app using MapLibre Android 13.7. It has the same features as iOS: offline dark map and fade, person and flag pins, zoom buttons, fare card, gas-band picker and Verify sheet. It uses the same shared Kotlin core and the same offline data. Gradle's `prepareOfflineAssets` task copies `data/build/` (plus the fares and the matrix photo) into the APK's assets. On first launch the app copies them to app storage, because MapLibre and the core read ordinary files (`OfflineData.kt`).
+
+The SDK location goes in `local.properties` (`sdk.dir=…`, not committed). Tested on the `Medium_Phone_API_37.0` emulator.
+
+```bash
+./gradlew :androidApp:installDebug
+```
+
 ## Build & run
 
 Requirements: Xcode, Homebrew `openjdk@21`, `xcodegen` and `pmtiles`, Node, Python 3. Building needs internet (OSM roads, tiles, fonts). The app doesn't.
@@ -47,7 +56,7 @@ scripts/build_mvp.sh
 open iosApp/BeFare.xcodeproj
 ```
 
-Then run the **BeFare** scheme on an iPhone simulator.
+Then run the **BeFare** scheme on an iPhone simulator. For Android, install the APK with the command above.
 
 ## Tests
 

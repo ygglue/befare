@@ -6,7 +6,7 @@ Every estimate can be **verified**: one tap shows the exact fare rules, the dist
 
 ## Status
 
-Planning. No app code yet.
+MVP: an iOS simulator build with on-device routing and Ordinance 1185 tricycle fares. See [docs/MVP.md](docs/MVP.md) for how to build it and how it differs from the plan.
 
 ## Scope at a glance
 
@@ -28,6 +28,7 @@ Planning. No app code yet.
 
 ## Docs
 
+- [MVP: build, run, differences from the plan](docs/MVP.md)
 - [Product requirements](docs/PRD.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Map & routing data pipeline](docs/DATA_PIPELINE.md)

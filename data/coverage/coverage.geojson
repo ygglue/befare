@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "BeFare v1 coverage (MVP sketch)",
+        "notes": "Hand-drawn around the city proper north to Sta. Lourdes. Replace with a union of barangay boundaries (ADR 0004)."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [118.680, 9.775], [118.700, 9.760], [118.725, 9.735], [118.745, 9.718],
+          [118.775, 9.720], [118.790, 9.745], [118.785, 9.790], [118.770, 9.825],
+          [118.750, 9.865], [118.715, 9.870], [118.700, 9.845], [118.675, 9.815],
+          [118.680, 9.775]
+        ]]
+      }
+    }
+  ]
+}

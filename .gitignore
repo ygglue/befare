@@ -1,0 +1,29 @@
+# OS / editors
+.DS_Store
+.idea/
+*.iml
+.vscode/
+local.properties
+
+# Gradle / Kotlin
+.gradle/
+build/
+.kotlin/
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcworkspace/xcuserdata/
+
+# Node (web portal)
+node_modules/
+.next/
+
+# Pipeline inputs & generated data (large; rebuilt by pipeline/)
+data/osm/*.pbf
+data/build/
+
+# Secrets
+.env
+.env.*
+!.env.example

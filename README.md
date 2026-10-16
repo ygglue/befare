@@ -23,7 +23,7 @@ Planning. No app code yet.
 
 - **Kotlin Multiplatform** shared core (routing, fare engine, data), native UIs: **Jetpack Compose** (Android), **SwiftUI** (iOS)
 - **MapLibre Native** with bundled offline vector tiles (PMTiles/MBTiles) built from OpenStreetMap
-- **Turso (libSQL)** backend for phase 2 plate lookup
+- **Supabase (Postgres)** backend for phase 2 plate lookup
 - **mapcn** (React + MapLibre GL JS) for the web admin/moderation portal
 
 ## Docs

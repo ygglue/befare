@@ -23,7 +23,7 @@
                │ MapLibre Native Android       │            │ MapLibre Native iOS           │
                └───────────────────────────────┘            └───────────────────────────────┘
 
- Phase 2:  backend/ (API in front of Turso)   web/ (Next.js + mapcn admin & moderation portal)
+ Phase 2:  backend/ (Supabase: Postgres + Auth) web/ (Next.js + mapcn admin & moderation portal)
 ```
 
 ## Principles
@@ -104,7 +104,7 @@ The fare version is shown on every estimate and in Verify. In phase 2, the app c
 
 ## Phase 2 backend
 
-See [PLATE_LOOKUP.md](PLATE_LOOKUP.md) and [ADR 0003](adr/0003-turso-backend.md). Short version: a small API (auth, rate limiting, moderation) in front of **Turso**. On the device, a local SQLite database (SQLDelight in `shared/`) caches lookups and holds reviews waiting to be sent.
+See [PLATE_LOOKUP.md](PLATE_LOOKUP.md) and [ADR 0003](adr/0003-supabase-backend.md). Short version: **Supabase** (Postgres, Auth, row-level security), with validation, rate limits and moderation in Postgres functions plus a few Edge Functions. On the device, a local SQLite database (SQLDelight in `shared/`) caches lookups and holds reviews waiting to be sent.
 
 ## Testing
 

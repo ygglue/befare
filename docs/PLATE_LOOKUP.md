@@ -18,34 +18,88 @@ The rest of BeFare is offline, but this feature needs the network to sync:
 
 ## Backend
 
-See [ADR 0003](adr/0003-turso-backend.md).
+See [ADR 0003](adr/0003-supabase-backend.md).
 
 ```
  App (shared/ SQLDelight cache + outbox)
-        │ HTTPS, JWT
+        │ HTTPS, Supabase Auth session (JWT)
         ▼
- API (auth, validation, rate limits, moderation hooks)
-        │ libSQL
-        ▼
- Turso   — vehicles, reviews, users, reports, moderation_actions
+ Supabase
+   ├─ Auth            phone OTP / social sign-in
+   ├─ Postgres + RLS  vehicles, reviews, profiles, reports, moderation_actions
+   ├─ RPC functions   submit_review, search_vehicle (validation + rate limits)
+   ├─ Edge Functions  QR token signing, partner data import, moderator alerts
+   └─ Storage         (later) QR assets, evidence attachments
         ▲
- Web portal (Next.js + mapcn) — moderators & authority partners
+ Web portal (Next.js + mapcn): moderators & authority partners, role checked by RLS
 ```
 
-The app **never** holds a Turso database token. All writes go through the API.
+The apps only ever hold the **anon key** plus the user's session. The **service-role key** is used only in Edge Functions and CI. The app writes reviews through the `submit_review` RPC, not by inserting into tables directly, so validation and rate limits can't be skipped.
 
 ### Tables (first draft)
 
 ```sql
-vehicles(id, plate_normalized, body_number, mode, franchise_status, franchise_source, updated_at)
-reviews(id, vehicle_id, user_id, rating, tags_json, comment, trip_date, status, created_at)
-  -- status: pending | published | hidden | removed
-users(id, auth_provider_id, created_at, trust_level, banned_at)
-reports(id, review_id, reporter_id, reason, created_at, resolved_at)
-moderation_actions(id, review_id, moderator_id, action, reason, created_at)
+create extension if not exists pg_trgm;
+
+create table vehicles (
+  id               uuid primary key default gen_random_uuid(),
+  plate_normalized text unique,
+  body_number      text,                       -- city-issued tricycle body / franchise no.
+  mode             text not null check (mode in ('tricycle','jeepney','uv','taxi')),
+  franchise_status text,                       -- only if provided by the authority
+  franchise_source text,
+  updated_at       timestamptz not null default now()
+);
+create index vehicles_plate_trgm on vehicles using gin (plate_normalized gin_trgm_ops);
+
+create table profiles (                        -- 1:1 with auth.users
+  id          uuid primary key references auth.users on delete cascade,
+  role        text not null default 'commuter' check (role in ('commuter','moderator','partner')),
+  trust_level int  not null default 0,
+  banned_at   timestamptz,
+  created_at  timestamptz not null default now()
+);
+
+create table reviews (
+  id         uuid primary key default gen_random_uuid(),
+  vehicle_id uuid not null references vehicles,
+  user_id    uuid not null references profiles,
+  rating     smallint not null check (rating between 1 and 5),
+  tags       text[] not null default '{}',
+  comment    text check (char_length(comment) <= 500),
+  trip_date  date not null,
+  status     text not null default 'pending'
+             check (status in ('pending','published','hidden','removed')),
+  created_at timestamptz not null default now(),
+  unique (vehicle_id, user_id, trip_date)      -- one review per vehicle per user per day
+);
+
+create table reports (
+  id uuid primary key default gen_random_uuid(),
+  review_id uuid not null references reviews, reporter_id uuid not null references profiles,
+  reason text not null, created_at timestamptz not null default now(), resolved_at timestamptz
+);
+
+create table moderation_actions (
+  id uuid primary key default gen_random_uuid(),
+  review_id uuid not null references reviews, moderator_id uuid not null references profiles,
+  action text not null, reason text, created_at timestamptz not null default now()
+);
 ```
 
-Plates are normalized before storing and searching: upper case, no spaces or dashes, and common character mix-ups (O/0, I/1) handled at search time only.
+### Row-level security (outline)
+
+| Table | Anonymous | Commuter | Moderator / partner |
+|---|---|---|---|
+| `vehicles` | read | read | read; partner can update franchise fields |
+| `reviews` | read `published` | read `published` + own; write only via `submit_review` | read all; change status via `moderate_review` |
+| `reports` | — | insert own | read / resolve |
+| `moderation_actions` | — | — | insert / read |
+| `profiles` | — | read / update own (not `role`) | read |
+
+Policies are tested with pgTAP (or SQL tests run by the Supabase CLI) in CI.
+
+Plates are normalized before storing and searching: upper case, no spaces or dashes. Look-alike characters (O/0, I/1) are handled at search time only, using `pg_trgm` similarity plus a normalized "confusable" form.
 
 ## Trust, safety and legal
 

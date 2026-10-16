@@ -87,12 +87,13 @@ struct MapView: UIViewRepresentable {
             line.lineJoin = NSExpression(forConstantValue: "round")
             style.addLayer(line)
 
-            for (source, color) in [(start, UIColor.systemGreen), (end, UIColor.systemRed)] {
-                let pin = MLNCircleStyleLayer(identifier: source.identifier, source: source)
-                pin.circleColor = NSExpression(forConstantValue: color)
-                pin.circleRadius = NSExpression(forConstantValue: 9)
-                pin.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
-                pin.circleStrokeWidth = NSExpression(forConstantValue: 3)
+            for (source, marker) in [(start, Marker.start), (end, Marker.destination)] {
+                style.setImage(marker.image, forName: marker.imageName)
+                let pin = MLNSymbolStyleLayer(identifier: source.identifier, source: source)
+                pin.iconImageName = NSExpression(forConstantValue: marker.imageName)
+                pin.iconAnchor = NSExpression(forConstantValue: "bottom") // tail tip = the location
+                pin.iconAllowsOverlap = NSExpression(forConstantValue: true)
+                pin.iconIgnoresPlacement = NSExpression(forConstantValue: true)
                 style.addLayer(pin)
             }
 

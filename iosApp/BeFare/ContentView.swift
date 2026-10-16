@@ -67,8 +67,8 @@ struct ContentView: View {
 
     private var pinPicker: some View {
         HStack(spacing: 8) {
-            pinChip(.start, title: "Start", color: .green, set: model.start != nil)
-            pinChip(.destination, title: "Destination", color: .red, set: model.destination != nil)
+            pinChip(.start, title: "Start", marker: .start, set: model.start != nil)
+            pinChip(.destination, title: "Destination", marker: .destination, set: model.destination != nil)
             Spacer()
             if model.start != nil && model.destination != nil {
                 iconButton("arrow.up.arrow.down", label: "Swap") { model.swap() }
@@ -80,11 +80,16 @@ struct ContentView: View {
         .padding(.top, 8)
     }
 
-    private func pinChip(_ pin: AppModel.Pin, title: String, color: Color, set: Bool) -> some View {
+    private func pinChip(_ pin: AppModel.Pin, title: String, marker: Marker, set: Bool) -> some View {
         let active = model.placing == pin
+        let color = Color(marker.color)
         return Button { model.placing = pin } label: {
             HStack(spacing: 6) {
-                Circle().fill(color).frame(width: 10, height: 10)
+                Image(systemName: marker.symbol)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 22, height: 22)
+                    .background(color, in: Circle())
                 Text(title).font(.subheadline.weight(active ? .semibold : .regular))
                 if set { Image(systemName: "checkmark").font(.caption2.weight(.bold)) }
             }
